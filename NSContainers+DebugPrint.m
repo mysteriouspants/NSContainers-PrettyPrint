@@ -7,97 +7,151 @@
 
 #import "NSContainers+DebugPrint.h"
 
-@protocol DescriptionPrint <NSObject>
-- (NSString *)fs_description;
-@end
+#import "vendor/JRSwizzle/JRSwizzle.h"
 
-@interface NSString (IndentMutator)
-- (NSString *)fs_stringByIndentingAllButFirstLine:(NSString *)indent;
-- (NSString *)fs_stringByIndentingAllLines:(NSString *)indent;
+@interface NSArray (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableArray (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSDictionary (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableDictionary (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 
 @interface NSString (EscapeArtist)
 - (NSString *)fs_stringByEscaping;
 @end
 
-@implementation NSArray (DebugPrint)
-- (NSString *)fs_description
+@implementation NSObject (DebugPrint)
++ (BOOL)fs_swizzleContainerPrinters:(__autoreleasing NSError **)error
 {
-    Class __strClass = [NSString class];
-    
-    NSString * indent_string = @"    ";
-    
-    NSMutableString * str = [[NSMutableString alloc] init];
-    [str appendString:@"("];
-    
-    for (id obj in self) {
-        if ([obj isKindOfClass:__strClass])
-            [str appendFormat:@"\n%@%@", indent_string, [obj fs_stringByEscaping]];
-        else if ([obj respondsToSelector:@selector(fs_description)])
-            [str appendFormat:@"\n%@%@", indent_string, [[obj fs_description] fs_stringByIndentingAllButFirstLine:indent_string]];
-        else if ([obj respondsToSelector:@selector(fs_descriptionDictionary)])
-            [str appendFormat:@"\n%@%@", indent_string, [[((id<DescriptionPrint>)[((id<DescriptionDict>)obj) fs_descriptionDictionary]) fs_description] fs_stringByIndentingAllButFirstLine:indent_string]];
-        else
-            [str appendFormat:@"\n%@%@", indent_string, [[obj description] fs_stringByEscaping]];
-        [str appendString:@","];
+    Class __dictClass, __arrayClass, __mutableDictClass, __mutableArrayClass;
+    @autoreleasepool {
+        __dictClass = [[NSDictionary dictionary] class];
+        __arrayClass = [[NSArray array] class];
+        __mutableDictClass = [[NSMutableDictionary dictionary] class];
+        __mutableArrayClass = [[NSMutableArray array] class];
     }
-    
-    if (0==[self count]) [str appendString:@")"];
-    else [str appendString:@"\n)"];
-    
-    return [str copy];
+
+    [__dictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                       withMethod:@selector(fs_descriptionWithLocale:indent:)
+                            error:error];
+    if (*error) return NO;
+    [__arrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                        withMethod:@selector(fs_descriptionWithLocale:indent:)
+                             error:error];
+    if (*error) return NO;
+    if (__dictClass != __mutableDictClass) {
+        [__mutableDictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                                  withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                       error:error];
+        if (*error) return NO;
+    }
+    if (__arrayClass != __mutableArrayClass) {
+        [__mutableArrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                                   withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                        error:error];
+        if (*error) return NO;
+    }
+
+    return YES;
+}
+@end
+
+@implementation NSArray (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
+{
+    NSMutableString * str = [[NSMutableString alloc] init];
+    Class __strClass = [NSString class];
+    char* __indentString = (char*)malloc(sizeof(char)*4*level);
+    memset(__indentString, ' ', sizeof(char)*4*level);
+    NSString * indent = [[NSString alloc] initWithBytes:__indentString length:sizeof(char)*4*level encoding:NSUTF8StringEncoding];
+    free(__indentString);
+    NSString * tmpString;
+
+    [str appendFormat:@"%@(\n", indent];
+
+    for (id obj in self) {
+
+        if ([obj isKindOfClass:__strClass])
+            tmpString = [obj fs_stringByEscaping];
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:indent:)])
+            tmpString = [obj descriptionWithLocale:locale indent:level+1];
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:)])
+            tmpString = [obj descriptionWithLocale:locale];
+        else if ([obj conformsToProtocol:@protocol(FSDescriptionDict)])
+            tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
+        else
+            tmpString = [[obj description] fs_stringByEscaping];
+
+        [str appendFormat:@"%@    %@,\n", indent, tmpString];
+    }
+
+    [str appendFormat:@"%@)", indent];
+
+    return str;
+}
+@end
+
+@implementation NSMutableArray (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:(NSUInteger)level];
 }
 @end
 
 @implementation NSDictionary (DebugPrint)
-- (NSString *)fs_description
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
-    Class __strClass = [NSString class];
-    
-    NSString * indent_string = @"    ";
-    
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
+{
     NSMutableString * str = [[NSMutableString alloc] init];
-    [str appendString:@"{"];
-    
+    Class __strClass = [NSString class];
+    char* __indentString = (char*)malloc(sizeof(char)*4*level);
+    memset(__indentString, ' ', sizeof(char)*4*level);
+    NSString * indent = [[NSString alloc] initWithBytes:__indentString length:sizeof(char)*4*level encoding:NSUTF8StringEncoding];
+    free(__indentString);
+
+    [str appendFormat:@"%@{\n", indent];
+
     for (id _key in [self allKeys]) {
         id _value = [self valueForKey:_key];
-        [str appendFormat:@"\n%@%@ = ", indent_string, _key];
+        [str appendFormat:@"%@    %@ = ", indent, [_key fs_stringByEscaping]];
         if ([_value isKindOfClass:__strClass])
-            [str appendFormat:@"%@", [_value fs_stringByEscaping]];
-        else if ([_value respondsToSelector:@selector(fs_description)])
-            [str appendString:[[_value fs_description] fs_stringByIndentingAllButFirstLine:indent_string]];
-        else if ([_value respondsToSelector:@selector(fs_descriptionDictionary)])
-            [str appendString:[[((id<DescriptionPrint>)[((id<DescriptionDict>)_value) fs_descriptionDictionary]) fs_description] fs_stringByIndentingAllButFirstLine:indent_string]];
+            [str appendString:[_value fs_stringByEscaping]];
+        else if ([_value respondsToSelector:@selector(descriptionWithLocale:indent:)])
+            [str appendString:[_value descriptionWithLocale:locale indent:1+level]];
+        else if ([_value respondsToSelector:@selector(descriptionWithLocale:)])
+            [str appendString:[_value descriptionWithLocale:locale]];
+        else if ([_value conformsToProtocol:@protocol(FSDescriptionDict)])
+            [str appendString:[[_value fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1]];
         else
             [str appendString:[[_value description] fs_stringByEscaping]];
-        [str appendString:@","];
+        [str appendString:@";\n"];
     }
-    
-    if (0==[[self allKeys] count]) [str appendString:@"}"];
-    else [str appendString:@"\n}"];
-    
-    return [str copy];
+
+    [str appendFormat:@"%@}", indent];
+
+    return str;
 }
 @end
 
-@implementation NSString (IndentMutator)
-- (NSString *)fs_stringByIndentingAllButFirstLine:(NSString *)indent
-{ @autoreleasepool {
-    NSMutableString * str = [[NSMutableString alloc] init];
-    __block size_t line_no=0;
-    [self enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
-        if (0==line_no) {
-            [str appendFormat:@"%@", line];
-        } else {
-            [str appendFormat:@"\n%@%@", indent, line];
-        }
-        ++line_no;
-    }];
-    return [str copy];
-} }
-- (NSString *)fs_stringByIndentingAllLines:(NSString *)indent
+@implementation NSMutableDictionary (DebugPrint)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
-    return [self stringByReplacingOccurrencesOfString:@"\n" withString:[NSString stringWithFormat:@"\n%@", indent]];
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
 @end
 

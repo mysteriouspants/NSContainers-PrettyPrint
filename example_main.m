@@ -1,6 +1,8 @@
 #import <Foundation/Foundation.h>
 #import "NSContainers+DebugPrint.h"
 
+#import "vendor/JRSwizzle/JRSwizzle.h"
+
 @interface MyObject : NSObject <DescriptionDict>
 @property (readwrite, strong) NSString * ivar0;
 @property (readwrite, assign) size_t ivar1;
@@ -31,6 +33,11 @@ int main(int argc, char *argv[]) { @autoreleasepool {
                                          forKey:@"arr"];
   
   NSLog(@"%@", [[m0 fs_descriptionDictionary] fs_description]);
+
+  // NSError * error;
+  // [NSDictionary jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:&error];
+
+  // NSLog(@"%@", m0);
 
   return 0;
 } }
