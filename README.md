@@ -1,6 +1,6 @@
 # Pretty Print Cocoa Containers
 
-Due to [a pretty obnoxious behavior in Foundation](http://openradar.appspot.com/10765424), the commonly used containers don't actually allow you to print out pretty descriptions. This is a dirty ugly hack which gets you that capability.
+Due to [a pretty obnoxious behavior in Foundation](http://openradar.appspot.com/10765424), the commonly used containers don't actually allow you to print out pretty descriptions of your own custom objects. This is a dirty ugly hack which gets you that capability.
 
 ## In a flash
 
