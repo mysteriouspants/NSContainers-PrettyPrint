@@ -88,7 +88,7 @@
         else if ([obj respondsToSelector:@selector(descriptionWithLocale:indent:)])
             tmpString = [obj descriptionWithLocale:locale indent:level+1];
         else if ([obj respondsToSelector:@selector(descriptionWithLocale:)])
-            tmpString = [obj descriptionWithLocale:locale];
+            tmpString = [[obj descriptionWithLocale:locale] fs_stringByEscaping];
         else if ([obj conformsToProtocol:@protocol(FSDescriptionDict)])
             tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
         else
@@ -126,21 +126,20 @@
 
     [str appendFormat:@"%@{\n", indent];
 
-    for (id _key in [self allKeys]) {
-        id _value = [self valueForKey:_key];
+    [self enumerateKeysAndObjectsUsingBlock:^(id _key, id _value, BOOL *stop) {
         [str appendFormat:@"%@    %@ = ", indent, [_key fs_stringByEscaping]];
         if ([_value isKindOfClass:__strClass])
             [str appendString:[_value fs_stringByEscaping]];
         else if ([_value respondsToSelector:@selector(descriptionWithLocale:indent:)])
             [str appendString:[_value descriptionWithLocale:locale indent:1+level]];
         else if ([_value respondsToSelector:@selector(descriptionWithLocale:)])
-            [str appendString:[_value descriptionWithLocale:locale]];
+            [str appendString:[[_value descriptionWithLocale:locale] fs_stringByEscaping]];
         else if ([_value conformsToProtocol:@protocol(FSDescriptionDict)])
             [str appendString:[[_value fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1]];
         else
             [str appendString:[[_value description] fs_stringByEscaping]];
         [str appendString:@";\n"];
-    }
+    }];
 
     [str appendFormat:@"%@}", indent];
 
@@ -172,6 +171,9 @@
             [s replaceOccurrencesOfString:pattern withString:[replacementDict objectForKey:pattern] options:NSLiteralSearch range:NSMakeRange(0, [s length])];
         }
     }
+
+    if (NSNotFound!=[s rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@";,. "]].location)
+        replacedSomething = YES;
     
     if (YES==replacedSomething) {
         [s insertString:@"\"" atIndex:0];

@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) { @autoreleasepool {
     [NSArray arrayWithObjects:
       @"Foo",
       @"Newlines\nAre fun?",
+      @"I have space but no newline",
       [NSArray array],
       [NSArray arrayWithObject:[NSArray arrayWithObject:@"foo"]],
       [NSDictionary dictionary],
