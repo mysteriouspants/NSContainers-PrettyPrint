@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) { @autoreleasepool {
   [str appendFormat:@"%s{\n",indent];
   [str appendFormat:@"%s    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
   [str appendFormat:@"%s    _ivar1 = %lu;\n",indent,_ivar1];
-  [str appendFormat:@"%s    _ivar2 = %@;\n",indent,_ivar2];
+  [str appendFormat:@"%s    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
   [str appendFormat:@"%s}",indent];
 
   free(indent); // no leaking!

@@ -22,23 +22,23 @@ In the output, pay *special attention* to how the object in the dictionary chang
     {
         _ivar0 = Foo;
         _ivar1 = 42;
-        _ivar2 = {
-        anotherObject = "{\n    _ivar0 = Bar;\n    _ivar1 = 1;\n    _ivar2 = {\n};\n}";
-    };
+        _ivar2 =     {
+            anotherObject = "{\n    _ivar0 = Bar;\n    _ivar1 = 1;\n    _ivar2 =     {\n    };\n}";
+        };
     }
 
     After swizzling:
     {
         _ivar0 = Foo;
         _ivar1 = 42;
-        _ivar2 = {
-        anotherObject =     {
-            _ivar0 = Bar;
-            _ivar1 = 1;
-            _ivar2 = {
-    };
+        _ivar2 =     {
+            anotherObject =         {
+                _ivar0 = Bar;
+                _ivar1 = 1;
+                _ivar2 =             {
+                };
+            };
         };
-    };
     }
 
 ### Because code speaks louder than words
@@ -104,7 +104,7 @@ From the file `example_for_readme.m`:
       [str appendFormat:@"%s{\n",indent];
       [str appendFormat:@"%s    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
       [str appendFormat:@"%s    _ivar1 = %lu;\n",indent,_ivar1];
-      [str appendFormat:@"%s    _ivar2 = %@;\n",indent,_ivar2];
+      [str appendFormat:@"%s    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
       [str appendFormat:@"%s}",indent];
 
       free(indent); // no leaking!
