@@ -7,20 +7,23 @@ LD  = CC
 PRODUCTS = {
 # executable                    => source file with the main method
   'example_main'                => 'example_main.m',
-  'default_description_example' => 'default_description_example.m'
+  'default_description_example' => 'default_description_example.m',
+  'readme-example'              => 'example_for_readme.m'
 }
 
 CFLAGS = [
   '-DDEBUG',
   '-std=c99',
-  '-fobjc-arc'
+  '-fblocks',
+  '-fobjc-arc',
+  '-Ivendor/JRSwizzle'
 ].join(' ')
 
 LIBS = [
   '-framework Foundation'
 ].join(' ')
 
-OBJC_SOURCES = FileList['*.m'].include('vendor/JRSwizzle/*.m')
+OBJC_SOURCES = FileList['*.m', 'vendor/JRSwizzle/*.m']
 O_FILES = OBJC_SOURCES.ext('.o')
 
 rule '.o' => ['.m'] do |t|

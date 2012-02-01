@@ -1,27 +1,10 @@
 #import <Foundation/Foundation.h>
 #import "NSContainers+DebugPrint.h"
-
-#import "vendor/JRSwizzle/JRSwizzle.h"
-
-@interface MyObject : NSObject <DescriptionDict>
-@property (readwrite, strong) NSString * ivar0;
-@property (readwrite, assign) size_t ivar1;
-@property (readwrite, strong) NSDictionary * ivar2;
-@end
-
-@implementation MyObject
-@synthesize ivar0=_ivar0,ivar1=_ivar1,ivar2=_ivar2;
-- (NSDictionary *)fs_descriptionDictionary
-{
-  return [NSDictionary dictionaryWithObjectsAndKeys:
-          _ivar0,                                       @"_ivar0",
-          [NSNumber numberWithUnsignedLongLong:_ivar1], @"_ivar1",
-          _ivar2,                                       @"_ivar2", nil];
-}
-@end
+#import "console.h"
+#import "C.h"
 
 int main(int argc, char *argv[]) { @autoreleasepool {
-  MyObject * m0 = [[MyObject alloc] init], * m1 = [[MyObject alloc] init];
+  C0 * m0 = [[C0 alloc] init], * m1 = [[C0 alloc] init];
 
   m0.ivar0 = @"m0: Foobar!";
   m0.ivar1 = 42;
@@ -32,12 +15,26 @@ int main(int argc, char *argv[]) { @autoreleasepool {
   m1.ivar2 = [NSDictionary dictionaryWithObject:[NSArray arrayWithObjects:@"Foo", @"Bar", [NSArray array], [NSDictionary dictionary], nil]
                                          forKey:@"arr"];
   
-  NSLog(@"%@", [[m0 fs_descriptionDictionary] fs_description]);
+  NSError * error;
+  [NSObject fs_swizzleContainerPrinters:&error];
+  if (error) dm_PrintLn(@"error: %@", error);
 
-  // NSError * error;
-  // [NSDictionary jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:&error];
+  // printing C0 by default just gives you some odd junk
+  dm_PrintLn(@"C0 Standard format print:          %@", m0); // <C0: 0x10c414290>
+  // printing the description dictionary gives you something much more useful; notice how
+  // the C0 nested in the dictionary is expanded, too!
+  dm_PrintLn(@"C0 fs_descriptionDictionary print: %@", [m0 fs_descriptionDictionary]); // {\n    __ivar2 = {...}}
+  dm_PrintLn(@"\n");
 
-  // NSLog(@"%@", m0);
+  // C1 has a method description which just chains to descriptionWithLocale:indent, allowing
+  // the default output to be pretty-printed.
+  // The inner object in the dictionary is still of type C0, not C1; it will be pretty-printed
+  // because of the fs_descriptionDictionary method.
+  C1 * m0_1 = [[C1 alloc] initWithC0:m0];
+
+  dm_PrintLn(@"C1 Standard format print: %@", m0_1); // {\n    __ivar2 = {...}}
+  // If I didn't use fs_descriptionDictionary, then I could just as easily use objects which all
+  // implement descriptionWithLocale:indent: and not worry about it.
 
   return 0;
 } }

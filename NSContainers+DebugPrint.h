@@ -16,10 +16,7 @@
 + (BOOL)fs_swizzleContainerPrinters:(__autoreleasing NSError **)error;
 @end
 
-// @interface NSArray (DebugPrint)
-// - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
-// @end
-
-// @interface NSDictionary (DebugPrint)
-// - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
-// @end
+// ASCII property-list style escaping
+@interface NSString (EscapeArtist)
+- (NSString *)fs_stringByEscaping;
+@end

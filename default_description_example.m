@@ -1,10 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import "NSContainers+DebugPrint.h"
-
-#import <stdio.h>
-
-void dm_PrintLn(NSString* format, ...)        NS_FORMAT_FUNCTION(1,2);
+#import "console.h"
 
 int main(int argc, char *argv[]) { @autoreleasepool {
   NSDictionary * dict = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -53,12 +50,3 @@ int main(int argc, char *argv[]) { @autoreleasepool {
 
   return 0;
 }}
-
-void dm_PrintLn(NSString *format, ...)
-{
-    va_list arguments;
-    va_start(arguments, format);
-    NSString* s0 = [[NSString alloc] initWithFormat:format arguments:arguments];
-    va_end(arguments);
-    printf("%s\n", [s0 UTF8String]);
-}

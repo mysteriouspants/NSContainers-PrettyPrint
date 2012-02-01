@@ -7,7 +7,7 @@
 
 #import "NSContainers+DebugPrint.h"
 
-#import "vendor/JRSwizzle/JRSwizzle.h"
+#import "JRSwizzle.h"
 
 @interface NSArray (DebugPrint)
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
@@ -22,10 +22,6 @@
 @end
 @interface NSMutableDictionary (DebugPrint)
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
-@end
-
-@interface NSString (EscapeArtist)
-- (NSString *)fs_stringByEscaping;
 @end
 
 @implementation NSObject (DebugPrint)
@@ -77,12 +73,12 @@
     memset(__indentString, ' ', sizeof(char)*4*level);
     NSString * indent = [[NSString alloc] initWithBytes:__indentString length:sizeof(char)*4*level encoding:NSUTF8StringEncoding];
     free(__indentString);
-    NSString * tmpString;
+    __block NSString * tmpString;
 
     [str appendFormat:@"%@(\n", indent];
 
-    for (id obj in self) {
-
+    NSUInteger lastObjectIndex = [self count]-1;
+    [self enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         if ([obj isKindOfClass:__strClass])
             tmpString = [obj fs_stringByEscaping];
         else if ([obj respondsToSelector:@selector(descriptionWithLocale:indent:)])
@@ -94,8 +90,8 @@
         else
             tmpString = [[obj description] fs_stringByEscaping];
 
-        [str appendFormat:@"%@    %@,\n", indent, tmpString];
-    }
+        [str appendFormat:@"%@    %@%@\n", indent, tmpString, (idx==lastObjectIndex)?@"":@","];
+    }];
 
     [str appendFormat:@"%@)", indent];
 
