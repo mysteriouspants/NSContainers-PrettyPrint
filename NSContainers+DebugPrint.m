@@ -42,18 +42,48 @@
     [__arrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
                         withMethod:@selector(fs_descriptionWithLocale:indent:)
                              error:error];
-    if (*error) return NO;
+    if (*error) {
+        // unswizzle to prevent a mixed state; it's reasonable to expect that
+        // if the swizzle worked the first time that it'll work again
+        [__dictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                           withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                error:error];
+        return NO;
+    }
     if (__dictClass != __mutableDictClass) {
         [__mutableDictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
                                   withMethod:@selector(fs_descriptionWithLocale:indent:)
                                        error:error];
-        if (*error) return NO;
+        if (*error) {
+            // unswizzle to prevent a mixed state
+            [__dictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                               withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                    error:error];
+            [__arrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                                withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                     error:error];
+            return NO;
+        }
     }
     if (__arrayClass != __mutableArrayClass) {
         [__mutableArrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
                                    withMethod:@selector(fs_descriptionWithLocale:indent:)
                                         error:error];
-        if (*error) return NO;
+        if (*error) {
+            // unswizzle to prevent a mixed state
+            [__dictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                               withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                    error:error];
+            [__arrayClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                                withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                     error:error];
+            if (__dictClass != __mutableDictClass) {
+                [__mutableDictClass jr_swizzleMethod:@selector(descriptionWithLocale:indent:)
+                                          withMethod:@selector(fs_descriptionWithLocale:indent:)
+                                               error:error];
+                             }
+            return NO;
+        }
     }
 
     return YES;
