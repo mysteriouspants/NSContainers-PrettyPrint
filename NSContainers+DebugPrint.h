@@ -20,3 +20,9 @@
 @interface NSString (EscapeArtist)
 - (NSString *)fs_stringByEscaping;
 @end
+
+// Helper when working with indents.
+@interface NSString (FilledString)
++ (NSString *)fs_stringByFillingWithCharacter:(char)character repeated:(NSUInteger)times;
++ (NSString *)fs_stringByFillingWithString:(NSString *)string repeated:(NSUInteger)times;
+@end

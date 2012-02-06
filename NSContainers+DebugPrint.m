@@ -99,10 +99,7 @@
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     Class __strClass = [NSString class];
-    char* __indentString = (char*)malloc(sizeof(char)*4*level);
-    memset(__indentString, ' ', sizeof(char)*4*level);
-    NSString * indent = [[NSString alloc] initWithBytes:__indentString length:sizeof(char)*4*level encoding:NSUTF8StringEncoding];
-    free(__indentString);
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
     __block NSString * tmpString;
 
     [str appendFormat:@"%@(\n", indent];
@@ -145,10 +142,7 @@
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     Class __strClass = [NSString class];
-    char* __indentString = (char*)malloc(sizeof(char)*4*level);
-    memset(__indentString, ' ', sizeof(char)*4*level);
-    NSString * indent = [[NSString alloc] initWithBytes:__indentString length:sizeof(char)*4*level encoding:NSUTF8StringEncoding];
-    free(__indentString);
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
 
     [str appendFormat:@"%@{\n", indent];
 
@@ -208,4 +202,29 @@
     
     return [s copy];
 } }
+@end
+
+@implementation NSString (FilledString)
++ (NSString *)fs_stringByFillingWithCharacter:(char)character repeated:(NSUInteger)times
+{
+    char* f = malloc(sizeof(char)*times);
+//    unichar* f = malloc(sizeof(unichar)*times+1);
+//    f = (unichar*)wmemset((wchar_t*)f, character, times);
+    
+    f = memset(f, character, times); // memset may be implemented in assembler, which has some really spiffy bits to make filling memory blocks super-fast.
+    // It's fair to expect OS X to have an optimized memset; ObjC zero-fills new objects, so using memset for that AND having that super-optimized makes sense.
+    // So, by using memset we get to piggy-back on their work, for free.
+    return [[NSString alloc] initWithBytesNoCopy:f length:times encoding:NSASCIIStringEncoding freeWhenDone:YES];
+//    NSString * s= [[NSString alloc] initWithUTF8String:<#(const char *)#>tWithCharacters:f length:times];
+//    free(f);
+//    return s;
+}
++ (NSString *)fs_stringByFillingWithString:(NSString *)string repeated:(NSUInteger)times
+{
+    NSMutableString * s = [NSMutableString stringWithCapacity:[string length]*times];
+    for (NSUInteger i=0;
+         i<times;
+         ++i) [s appendString:string];
+    return s;
+}
 @end

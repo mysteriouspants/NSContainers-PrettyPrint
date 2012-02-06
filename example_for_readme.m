@@ -50,17 +50,14 @@ int main(int argc, char *argv[]) { @autoreleasepool {
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
   NSMutableString * str = [[NSMutableString alloc] init];
-  char* indent = malloc(sizeof(char)*4*level+1);
-  memset(indent, ' ', sizeof(char)*4*level);
-  indent[4*level]='\0'; // null terminator for c-string format appends
+  NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
 
-  [str appendFormat:@"%s{\n",indent];
-  [str appendFormat:@"%s    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
-  [str appendFormat:@"%s    _ivar1 = %lu;\n",indent,_ivar1];
-  [str appendFormat:@"%s    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
-  [str appendFormat:@"%s}",indent];
+  [str appendFormat:@"%@{\n",indent];
+  [str appendFormat:@"%@    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
+  [str appendFormat:@"%@    _ivar1 = %lu;\n",indent,_ivar1];
+  [str appendFormat:@"%@    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
+  [str appendFormat:@"%@}",indent];
 
-  free(indent); // no leaking!
   return str;
 }
 - (NSString *)description { return [self descriptionWithLocale:nil indent:0]; }
