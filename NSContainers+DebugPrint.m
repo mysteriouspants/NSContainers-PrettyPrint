@@ -228,3 +228,15 @@
     return s;
 }
 @end
+
+@implementation NSMutableString (PrettyDict)
+- (void)fs_appendKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level
+{
+    NSString * _value = nil;
+    if ([value respondsToSelector:@selector(fs_descriptionDictionary)]) _value = [[value fs_descriptionDictionary] descriptionWithLocale:locale indent:level];
+    else if ([value respondsToSelector:@selector(descriptionWithLocale:indent:)]) _value = [value descriptionWithLocale:locale indent:level];
+    else if ([value respondsToSelector:@selector(descriptionWithLocale:)]) _value = [[value descriptionWithLocale:locale] fs_stringByEscaping];
+    else _value = [value fs_stringByEscaping];
+    [self appendFormat:@"%@    %@ = %@;\n", indentString, [key fs_stringByEscaping], _value];
+}
+@end

@@ -26,3 +26,7 @@
 + (NSString *)fs_stringByFillingWithCharacter:(char)character repeated:(NSUInteger)times;
 + (NSString *)fs_stringByFillingWithString:(NSString *)string repeated:(NSUInteger)times;
 @end
+
+@interface NSMutableString (PrettyDict)
+- (void)fs_appendKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level;
+@end
