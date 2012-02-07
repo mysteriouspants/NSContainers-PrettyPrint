@@ -141,27 +141,15 @@
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
 {
     NSMutableString * str = [[NSMutableString alloc] init];
-    Class __strClass = [NSString class];
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
 
-    [str appendFormat:@"%@{\n", indent];
+    [str fs_appendDictionaryStartWithIndentString:indent];
 
     [self enumerateKeysAndObjectsUsingBlock:^(id _key, id _value, BOOL *stop) {
-        [str appendFormat:@"%@    %@ = ", indent, [_key fs_stringByEscaping]];
-        if ([_value isKindOfClass:__strClass])
-            [str appendString:[_value fs_stringByEscaping]];
-        else if ([_value respondsToSelector:@selector(descriptionWithLocale:indent:)])
-            [str appendString:[_value descriptionWithLocale:locale indent:1+level]];
-        else if ([_value respondsToSelector:@selector(descriptionWithLocale:)])
-            [str appendString:[[_value descriptionWithLocale:locale] fs_stringByEscaping]];
-        else if ([_value conformsToProtocol:@protocol(FSDescriptionDict)])
-            [str appendString:[[_value fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1]];
-        else
-            [str appendString:[[_value description] fs_stringByEscaping]];
-        [str appendString:@";\n"];
+        [str fs_appendDictionaryKey:_key value:_value locale:locale indentString:indent indentLevel:level+1];
     }];
 
-    [str appendFormat:@"%@}", indent];
+    [str fs_appendDictionaryEndWithIndentString:indent];
 
     return str;
 }
