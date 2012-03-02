@@ -16,6 +16,7 @@ CFLAGS = [
   '-std=c99',
   '-fblocks',
   '-fobjc-arc',
+  '-INSContainers+PrettyPrint'
   '-Ivendor/JRSwizzle'
 ].join(' ')
 
@@ -23,7 +24,7 @@ LIBS = [
   '-framework Foundation'
 ].join(' ')
 
-OBJC_SOURCES = FileList['*.m', 'vendor/JRSwizzle/*.m']
+OBJC_SOURCES = FileList['*.m', 'NSContainers+PrettyPrint/*.m', 'vendor/JRSwizzle/*.m']
 O_FILES = OBJC_SOURCES.ext('.o')
 
 rule '.o' => ['.m'] do |t|
