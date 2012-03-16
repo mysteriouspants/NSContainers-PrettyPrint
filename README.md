@@ -4,14 +4,7 @@ Due to [a pretty obnoxious behavior in Foundation](http://openradar.appspot.com/
 
 ## In a flash
 
-I swizzle `descriptionWithLocale:indent:` on the *implementation* following classes:
-
-* `NSArray`
-* `NSDictionary`
-* `NSMutableArray`
-* `NSMutableDictionary`
-
-So this means that I swizzle on `[[NSArray array] class]` and not `[NSArray class]`.
+I replace the implementations of `descriptionWithLocale:indent:` on commonly used containers.
 
 ## Example
 
@@ -41,77 +34,16 @@ In the output, pay *special attention* to how the object in the dictionary chang
         };
     }
 
-### Because code speaks louder than words
+*Because I switched from swizzling to replacing based on build flags, it's no longer possible to toggle this functionality on and off.*
 
-From the file `example_for_readme.m`:
+### How to enable
 
-    #import <Foundation/Foundation.h>
-    #import "NSContainers+DebugPrint.h"
-    #import "console.h"
+This is turned on by use of defines created by compiler flags. For example, if I wanted to turn everything on, I'd add the `-DDEBUGPRINT_ALL` flag to my build settings.
 
-    @interface ExObj : NSObject
-    @property (readwrite, strong) NSString *     ivar0;
-    @property (readwrite, assign) size_t         ivar1;
-    @property (readwrite, strong) NSDictionary * ivar2;
-    + (id)exObjWithString:(NSString *)ivar0 uinteger:(size_t)ivar1 dictionary:(NSDictionary *)ivar2;
-    @end
-
-    int main(int argc, char *argv[]) { @autoreleasepool {
-
-      ExObj * e = [ExObj exObjWithString:@"Foo"
-          uinteger:42
-        dictionary:[NSDictionary dictionaryWithObject:
-          [ExObj exObjWithString:@"Bar"
-              uinteger:argc
-            dictionary:[NSDictionary dictionary]]
-                                               forKey:@"anotherObject"]];
-
-      dm_PrintLn(@"Before swizzling:");
-      dm_PrintLn(@"%@", e);
-
-      NSError * error;
-      [NSObject fs_swizzleContainerPrinters:&error];
-      if (error) {
-        dm_PrintLn(@"Failed to swizzle: %@", error);
-        return -1;
-      }
-
-      dm_PrintLn(@"\nAfter swizzling:");
-      dm_PrintLn(@"%@", e);
-
-      return 0;
-
-    } }
-
-    @implementation ExObj
-    @synthesize ivar0=_ivar0,ivar1=_ivar1,ivar2=_ivar2;
-    + (id)exObjWithString:(NSString *)ivar0 uinteger:(size_t)ivar1 dictionary:(NSDictionary *)ivar2
-    {
-      ExObj * e = [[[self class] alloc] init];
-      if (!e) return e;
-      e.ivar0=ivar0;
-      e.ivar1=ivar1;
-      e.ivar2=ivar2;
-      return e;
-    }
-    - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
-    {
-      NSMutableString * str = [[NSMutableString alloc] init];
-      char* indent = malloc(sizeof(char)*4*level+1);
-      memset(indent, ' ', sizeof(char)*4*level);
-      indent[4*level]='\0'; // null terminator for c-string format appends
-
-      [str appendFormat:@"%s{\n",indent];
-      [str appendFormat:@"%s    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
-      [str appendFormat:@"%s    _ivar1 = %lu;\n",indent,_ivar1];
-      [str appendFormat:@"%s    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
-      [str appendFormat:@"%s}",indent];
-
-      free(indent); // no leaking!
-      return str;
-    }
-    - (NSString *)description { return [self descriptionWithLocale:nil indent:0]; }
-    @end
+* `DEBUGPRINT_ALL`: `NSArray`, `NSMutableArray`, `NSDictionary`, `NSMutableDictionary`, `NSSet`, `NSMutableSet`
+* `DEBUGPRINT_NSARRAY`: `NSArray`, `NSMutableArray`
+* `DEBUGPRINT_NSDICTIONARY`: `NSDictionary`, `NSMutableDictionary`
+* `DEBUGPRINT_NSSET`: `NSSet`, `NSMutableSet`
 
 ## FSDescriptionDict
 
@@ -138,8 +70,4 @@ It's a little easier to throw together a dictionary than it is to lovingly hand-
 
 ## WTF man, why?
 
-I was writing some stuff and I just really wanted to see pretty-printed output from some of my own classes. Nothing more, nothing less. This is a *really quick* sketch, but I believe it's a starting point that you might consider using to expand upon. Things that aren't quite right:
-
-* Well, it hasn't been rigorously tested.
-* String escaping isn't all the way there. There's a bunch of control characters which need to be escaped.
-* It doesn't order dictionaries the same way that `NSDictionary` does; it's not a big deal, but it'd be nice.
+I like my objects formatted nicely when they print out to the console. It helps when debugging applications.

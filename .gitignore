@@ -2,3 +2,5 @@
 default_description_example
 example_main
 readme-example
+.DS_Store
+.rbx

@@ -1,3 +1,0 @@
-[submodule "vendor/JRSwizzle"]
-	path = vendor/JRSwizzle
-	url = git@github.com:rentzsch/jrswizzle.git

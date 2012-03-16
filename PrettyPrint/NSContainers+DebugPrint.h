@@ -7,14 +7,42 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * Add the build flag -DDEBUGPRINT_ALL to get pretty-printed containers.
+ * You can also use DEBUGPRINT_NSARRAY, DEBUGPRINT_NSDICTIONARY, and DEBUGPRINT_NSSET to get just that container if you so chose.
+ */
+
 // implement this in order to have your own objects print themselves in property-list like format
 @protocol FSDescriptionDict <NSObject>
 - (NSDictionary *)fs_descriptionDictionary;
 @end
 
-@interface NSObject (DebugPrint)
-+ (BOOL)fs_swizzleContainerPrinters:(__autoreleasing NSError **)error;
+#if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL)
+@interface NSArray (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
+@interface NSMutableArray (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
+
+#if defined(DEBUGPRINT_NSDICTIONARY) || defined(DEBUGPRINT_ALL)
+@interface NSDictionary (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableDictionary (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
+
+#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL)
+@interface NSSet (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableSet (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
 
 // ASCII property-list style escaping
 @interface NSString (EscapeArtist)

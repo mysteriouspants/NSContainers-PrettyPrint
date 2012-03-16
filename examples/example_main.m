@@ -14,10 +14,6 @@ int main(int argc, char *argv[]) { @autoreleasepool {
   m1.ivar1 = 1;
   m1.ivar2 = [NSDictionary dictionaryWithObject:[NSArray arrayWithObjects:@"Foo", @"Bar", [NSArray array], [NSDictionary dictionary], nil]
                                          forKey:@"arr"];
-  
-  NSError * error;
-  [NSObject fs_swizzleContainerPrinters:&error];
-  if (error) dm_PrintLn(@"error: %@", error);
 
   // printing C0 by default just gives you some odd junk
   dm_PrintLn(@"C0 Standard format print:          %@", m0); // <C0: 0x10c414290>

@@ -19,16 +19,6 @@ int main(int argc, char *argv[]) { @autoreleasepool {
         dictionary:[NSDictionary dictionary]]
                                            forKey:@"anotherObject"]];
 
-  dm_PrintLn(@"Before swizzling:");
-  dm_PrintLn(@"%@", e);
-
-  NSError * error;
-  [NSObject fs_swizzleContainerPrinters:&error];
-  if (error) {
-    dm_PrintLn(@"Failed to swizzle: %@", error);
-    return -1;
-  }
-
   dm_PrintLn(@"\nAfter swizzling:");
   dm_PrintLn(@"%@", e);
 

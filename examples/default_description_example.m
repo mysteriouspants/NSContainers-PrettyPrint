@@ -38,13 +38,6 @@ int main(int argc, char *argv[]) { @autoreleasepool {
   dm_PrintLn(@"[[dict valueForKeyPath:@\"emptyArray\"] class]:   %@", NSStringFromClass([[dict valueForKeyPath:@"emptyArray"] class]));
 #endif
 
-  dm_PrintLn(@"Exemplar of what normal NSContainer descriptions look like:");
-  dm_PrintLn(@"%@", dict);
-
-  NSError * error;
-  [NSObject fs_swizzleContainerPrinters:&error];
-  if (error) dm_PrintLn(@"%@", error);
-
   dm_PrintLn(@"What the swizzled output looks like:");
   dm_PrintLn(@"%@", dict);
 
