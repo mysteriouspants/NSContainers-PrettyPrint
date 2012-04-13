@@ -57,6 +57,7 @@
 
 @interface NSMutableString (PrettyDict)
 - (void)fs_appendDictionaryStartWithIndentString:(NSString *)indentString;
+- (void)fs_appendDictionaryStartWithIndentString:(NSString *)indentString caller:(id)caller;
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level;
 - (void)fs_appendDictionaryEndWithIndentString:(NSString *)indentString;
 @end

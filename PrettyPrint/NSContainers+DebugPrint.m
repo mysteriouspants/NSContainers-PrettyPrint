@@ -212,6 +212,12 @@
 {
   [self appendFormat:@"%@{\n", indentString];
 }
+- (void)fs_appendDictionaryStartWithIndentString:(NSString *)indentString caller:(id)caller
+{
+    [self appendFormat:@"%@{\n", indentString];
+    [self fs_appendDictionaryKey:@"_class" value:NSStringFromClass([caller class]) locale:nil indentString:indentString indentLevel:1];
+    [self fs_appendDictionaryKey:@"_ptr" value:[NSString stringWithFormat:@"%p", caller] locale:nil indentString:indentString indentLevel:1];
+}
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level
 {
     NSString * _value = nil;
