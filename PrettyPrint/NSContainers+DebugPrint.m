@@ -7,25 +7,79 @@
 
 #import "NSContainers+DebugPrint.h"
 
-#if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL)
+#ifdef DEBUGPRINT_SWIZZLE
+#import "JRSwizzle.h"
+
+bool fspp_swizzleContainerPrinters(NSError ** error)
+{
+    Class nsarray_class, nsmutablearray_class, nsdictionary_class, nsmutabledictionary_class, nsset_class, nsmutableset_class, nsorderedset_class, nsmutableorderedset_class;
+    @autoreleasepool {
+        nsarray_class = [[NSArray array] class];
+        nsmutablearray_class = [[NSMutableArray array] class];
+        nsdictionary_class = [[NSDictionary dictionary] class];
+        nsmutabledictionary_class = [[NSMutableDictionary dictionary] class];
+        nsset_class = [[NSSet set] class];
+        nsmutableset_class = [[NSMutableSet set] class];
+        nsorderedset_class = [[NSOrderedSet orderedSet] class];
+        nsmutableorderedset_class = [[NSMutableOrderedSet orderedSet] class];
+    }
+    
+    [nsarray_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (*error) return false;
+    if (nsarray_class != nsmutablearray_class) {
+        [nsmutablearray_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+        if (*error) return false;
+    }
+    
+    [nsdictionary_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (*error) return false;
+    if (nsdictionary_class != nsmutabledictionary_class) {
+        [nsmutabledictionary_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+        if (*error) return false;
+    }
+    
+    [nsset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (*error) return false;
+    if (nsset_class != nsmutableset_class) {
+        [nsmutableset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+        if (*error) return false;
+    }
+    
+    [nsorderedset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (*error) return false;
+    if (nsorderedset_class != nsmutableorderedset_class) {
+        [nsmutableorderedset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+        if (*error) return false;
+    }
+    
+    return true;
+}
+#endif
+
+#if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
 @interface NSArray (__DebugPrint__)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
 @end
 @interface NSMutableArray (__DebugPrint__)
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 #endif
-#if defined(DEBUGPRINT_NSDICTIONARY) || defined(DEBUGPRINT_ALL)
+
+#if defined(DEBUGPRINT_NSDICTIONARY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
 @interface NSDictionary (__DebugPrint__)
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
 @end
 @interface NSMutableDictionary (__DebugPrint__)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+#endif
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 #endif
-#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL)
+
+#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
 @interface NSSet (__DebugPrint__)
 - (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
@@ -35,9 +89,25 @@
 @end
 #endif
 
-#if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL)
+#if defined(DEBUGPRINT_NSORDEREDSET) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
+@interface NSOrderedSet (__DebugPrint__)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableOrderedSet (__DebugPrint__)
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
+
+#if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
 @implementation NSArray (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
@@ -72,16 +142,28 @@
 }
 @end
 @implementation NSMutableArray (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
 @end
 #endif
 
-#if defined(DEBUGPRINT_NSDICTIONARY) || defined(DEBUGPRINT_ALL)
+#if defined(DEBUGPRINT_NSDICTIONARY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
 @implementation NSDictionary (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
@@ -102,16 +184,28 @@
 }
 @end
 @implementation NSMutableDictionary (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
 @end
 #endif
 
-#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL)
+#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL) || defined (DEBUGPRINT_SWIZZLE)
 @implementation NSSet (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }
@@ -122,6 +216,8 @@
     
     Class __strClass = [NSString class];
     __block NSString * tmpString;
+    NSUInteger count = [self count];
+    __block NSUInteger idx = 0;
     
     [str appendFormat:@"%@{(\n", indent];
     
@@ -137,12 +233,14 @@
         else
             tmpString = [[obj description] fs_stringByEscaping];
         
-        [str appendFormat:@"%@    %@%@\n", indent, tmpString, @","];
+        [str appendFormat:@"%@    %@", indent, tmpString];
+        if (idx+1 == count)
+            [str appendString:@"\n"];
+        else
+            [str appendString:@",\n"];
+        
+        idx++;
     }];
-    
-    // snip the last two characters, which is an ,\n, and replace with just an \n
-    if ([self count]>0)
-        [str replaceCharactersInRange:NSMakeRange([str length]-2, 2) withString:@"\n"];
     
     [str appendFormat:@"%@)}", indent];
     
@@ -150,7 +248,74 @@
 }
 @end
 @implementation NSMutableSet (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+@end
+#endif
+
+#if defined(DEBUGPRINT_NSORDEREDSET) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
+@implementation NSOrderedSet (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+- (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
+{
+    NSMutableString * str = [[NSMutableString alloc] init];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    
+    Class __strClass = [NSString class];
+    __block NSString * tmpString;
+    NSUInteger count = [self count];
+    
+    [str appendFormat:@"%@{(\n", indent];
+    
+    [self enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        if ([obj isKindOfClass:__strClass])
+            tmpString = [obj fs_stringByEscaping];
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:indent:)])
+            tmpString = [obj descriptionWithLocale:locale indent:level+1];
+        else if ([obj respondsToSelector:@selector(descriptionWithLocale:)])
+            tmpString = [[obj descriptionWithLocale:locale] fs_stringByEscaping];
+        else if ([obj conformsToProtocol:@protocol(FSDescriptionDict)])
+            tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
+        else
+            tmpString = [[obj description] fs_stringByEscaping];
+        
+        [str appendFormat:@"%@    %@", indent, tmpString];
+        if (idx+1 == count)
+            [str appendString:@"\n"];
+        else
+            [str appendString:@",\n"];
+    }];
+    
+    [str appendFormat:@"%@)}", indent];
+    
+    return str;
+}
+@end
+@implementation NSMutableOrderedSet (DebugPrint)
+#ifndef DEBUGPRINT_SWIZZLE
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
+{
+    return [self fs_descriptionWithLocale__impl:locale indent:level];
+}
+#endif
+- (NSString *)fs_descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     return [self fs_descriptionWithLocale__impl:locale indent:level];
 }

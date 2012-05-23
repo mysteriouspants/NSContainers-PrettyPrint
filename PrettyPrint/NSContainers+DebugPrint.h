@@ -9,8 +9,13 @@
 
 /**
  * Add the build flag -DDEBUGPRINT_ALL to get pretty-printed containers.
- * You can also use DEBUGPRINT_NSARRAY, DEBUGPRINT_NSDICTIONARY, and DEBUGPRINT_NSSET to get just that container if you so chose.
+ * You can also use DEBUGPRINT_NSARRAY, DEBUGPRINT_NSDICTIONARY, DEBUGPRINT_NSSET, and DEBUGPRINT_NSORDEREDSET to get just that container if you so chose.
+ * You can also use -DDEBUGPRINT_SWIZZLE to use a swizzling technique, if you have a situation where you want the swizzled output only part of the time.
  */
+
+#ifdef DEBUGPRINT_SWIZZLE
+bool fspp_swizzleContainerPrinters(NSError **);
+#endif
 
 // implement this in order to have your own objects print themselves in property-list like format
 @protocol FSDescriptionDict <NSObject>
@@ -40,6 +45,15 @@
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 @interface NSMutableSet (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
+
+#if defined(DEBUGPRINT_NSORDEREDSET) || defined(DEBUGPRINT_ALL)
+@interface NSOrderedSet (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+@interface NSMutableOrderedSet (DebugPrint)
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 #endif
