@@ -29,13 +29,21 @@ int main(int argc, const char * argv[])
                                                           uinteger:argc
                                                         dictionary:[NSDictionary dictionary]]
                                                                        forKey:@"anotherObject"]];
+        NSCAssert(fspp_on()==false, @"Swizzle state should be OFF.");
         printf("Before swizzling:\n%s\n", [[e description] UTF8String]);
         NSError * error;
         if (!fspp_swizzleContainerPrinters(&error)) {
             NSLog(@"Error: %@", error);
         }
+        NSCAssert(fspp_on()==true, @"Swizzle state should be ON.");
         printf("\nAfter swizzling:\n%s\n", [[e description] UTF8String]);
-        
+        printf("\nfspp_spacesPerIndent = 2\n");
+        fspp_spacesPerIndent = 2;
+        printf("%s\n", [[e description] UTF8String]);
+        if (!fspp_swizzleContainerPrinters(&error)) {
+            NSLog(@"Error: %@", error);
+        }
+        NSCAssert(fspp_on()==false, @"Swizzle state should be OFF.");
     }
     return 0;
 }
@@ -54,13 +62,15 @@ int main(int argc, const char * argv[])
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level
 {
     NSMutableString * str = [[NSMutableString alloc] init];
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
     
-    [str appendFormat:@"%@{\n",indent];
-    [str appendFormat:@"%@    _ivar0 = %@;\n",indent,[_ivar0 fs_stringByEscaping]];
-    [str appendFormat:@"%@    _ivar1 = %lu;\n",indent,_ivar1];
-    [str appendFormat:@"%@    _ivar2 = %@;\n",indent,[_ivar2 descriptionWithLocale:locale indent:level+1]];
-    [str appendFormat:@"%@}",indent];
+    [str appendFormat:@"%@<%@:%p\n",indent, NSStringFromClass([self class]), (const void*)self];
+    [str appendFormat:@"%@    _ivar0 = %@\n",indent,[_ivar0 fs_stringByEscaping]];
+    [str appendFormat:@"%@    _ivar1 = %lu\n",indent,_ivar1];
+    NSString * ivar2_desc = [_ivar2 descriptionWithLocale:locale indent:level+2];
+    if (fspp_suppressWhitespace(fspp_object))
+        ivar2_desc = [ivar2_desc stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    [str appendFormat:@"%@    _ivar2 = %@>",indent,ivar2_desc];
     
     return str;
 }

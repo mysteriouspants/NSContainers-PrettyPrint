@@ -149,15 +149,40 @@ After this, wrap your description code like this:
       // ...
     }
     // ...
-    #if defined (DEBUGPRINT_ALL) || defined (DEBUGPRINT_SWIZZLE) || \
-        defined (DEBUGPRINT_NSARRAY) || defined (DEBUGPRINT_NSDICTIONARY) \
-        defined (DEBUGPRINT_NSSET) || defined (DEBUGPRINT_NSORDEREDSET)
+    #ifdef DEBUGPRINT_ANY
     - (NSString *)descriptionWithLocale:(id)locale
                                  indent:(NSUInteger)level
+    {
+      // ...
+    }
+    - (NSString *)description
+    {
+      return [self descriptionWithLocale:nil indent:0];
+    }
+    #else
+    - (NSString *)description
     {
       // ...
     }
     #endif
     @end
 
-It should make release builds smaller.
+It should make release builds smaller. *Note that `DEBUGPRINT_ANY`
+requires the `NSContainers+DebugPrint.h` file be in scope already.*
+
+
+## Swizzling Detection
+
+If you have a situation in which you are using swizzling to enable debug
+printing, you can use the global function `fspp_on` to detect whether
+pretty-printing is active. Then, in your descriptions, you can use
+things like this:
+
+    - (NSString *)description
+    {
+      if (fspp_on())
+        return [self descriptionWithLocale:nil indent:0];
+      else {
+        // ..
+      }
+    }

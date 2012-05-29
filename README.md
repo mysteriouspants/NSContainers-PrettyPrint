@@ -17,30 +17,25 @@ on commonly used containers.
 In the output, pay *special attention* to how the object in the
 dictionary changes after swizzling:
 
-    > ./readme-example 
     Before swizzling:
-    {
-        _ivar0 = Foo;
-        _ivar1 = 42;
-        _ivar2 =     {
-            anotherObject = "{\n    _ivar0 = Bar;\n    _ivar1 = 1;\n    _ivar2 =     {\n    };\n}";
-        };
-    }
+    <ExObj:0x7fc098415140
+        _ivar0 = Foo
+        _ivar1 = 42
+        _ivar2 = {
+                anotherObject = "<ExObj:0x7fc098414d80\n    _ivar0 = Bar\n    _ivar1 = 1\n    _ivar2 = {\n        }>";
+            }>
 
     After swizzling:
-    {
-        _ivar0 = Foo;
-        _ivar1 = 42;
-        _ivar2 =     {
-            anotherObject =         {
-                _ivar0 = Bar;
-                _ivar1 = 1;
-                _ivar2 =             {
-                };
-            };
-        };
-    }
-
+    <ExObj:0x7fc098415140
+        _ivar0 = Foo
+        _ivar1 = 42
+        _ivar2 = {
+                anotherObject = <ExObj:0x7fc098414d80
+                    _ivar0 = Bar
+                    _ivar1 = 1
+                    _ivar2 = {
+                        }>;
+            }>    
 
 ### How to enable
 
@@ -62,36 +57,35 @@ swizzle the changes in an out at runtime:
 * `DEBUGPRINT_SWIZZLE`: Exposes the `fspp_swizzleContainerPrinters`
   function.
 
+Also, you can use the `DEBUGPRINT_SPACES_PER_INDENT` macro to define how
+many spaces per level of indentation. The default is four.
 
-## FSDescriptionDict
 
-My custom implementation of `descriptionWithLocale:indent:` does
-something else that's cool: if an object in an NSContainer conforms
-to the protocol `FSDescriptionDict`, then the dictionary returned
-by `fs_descriptionDictionary` is output instead of `description`.
-For example:
+## Whitespace Trimming
 
-    @interface MyObject : NSObject <DescriptionDict>
-    @property (readwrite, strong) NSString * ivar0;
-    @property (readwrite, assign) size_t ivar1;
-    @property (readwrite, strong) NSDictionary * ivar2;
-    @end
+By default, whitespace is trimmed from Foundation containers (a distinct
+difference from Foundation's default behavior). To illustrate the
+difference, consider the following:
 
-    @implementation MyObject
-    @synthesize ivar0=_ivar0,ivar1=_ivar1,ivar2=_ivar2;
-    - (NSDictionary *)fs_descriptionDictionary
     {
-      return [NSDictionary dictionaryWithObjectsAndKeys:
-              _ivar0,                                       @"_ivar0",
-              [NSNumber numberWithUnsignedLongLong:_ivar1], @"_ivar1",
-              _ivar2,                                       @"_ivar2", nil];
+        foo =     (
+            bar
+        );
     }
-    @end
 
-It's a little easier to throw together a dictionary than it
-is to lovingly hand-format all the output. If you don't want to
-use this functionality, then don't use that protocol in your
-own custom classes.
+Notice the whitespace after `foo =`? With whitespace trimming
+enabled (as it is by default), that disappears.
+
+    {
+        foo = (
+            bar
+        );
+    }
+
+This can make some kinds of descriptions much easier to work with.
+Please see the Whitespace guide for more information.
+
+To disable whitespace trimming, use the `DEBUGPRINT_NO_SUPPRESS_WHITESPACE_ALL` macro.
 
 
 ## WTF man, why?

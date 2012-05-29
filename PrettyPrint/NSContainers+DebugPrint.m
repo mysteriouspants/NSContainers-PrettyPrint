@@ -7,9 +7,108 @@
 
 #import "NSContainers+DebugPrint.h"
 
+#ifdef DEBUGPRINT_ANY
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_ALL
+bool __fspp_suppressWhitespaceAll = false;
+#else
+bool __fspp_suppressWhitespaceAll = true;
+#endif
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_NSARRAY
+bool __fspp_suppressWhitespaceArray = false;
+#else
+bool __fspp_suppressWhitespaceArray = true;
+#endif
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_NSDICTIONARY
+bool __fspp_suppressWhitespaceDictionary = false;
+#else
+bool __fspp_suppressWhitespaceDictionary = true;
+#endif
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_NSSET
+bool __fspp_suppressWhitespaceSet = false;
+#else
+bool __fspp_suppressWhitespaceSet = true;
+#endif
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_NSORDEREDSET
+bool __fspp_suppressWhitespaceOrderedSet = false;
+#else
+bool __fspp_suppressWhitespaceOrderedSet = true;
+#endif
+
+#ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_OBJECT
+bool __fspp_suppressWhitespaceObject = false;
+#else
+bool __fspp_suppressWhitespaceObject = true;
+#endif
+
+bool fspp_suppressWhitespace(enum __fspp_type t)
+{
+    if (__fspp_suppressWhitespaceAll) return true;
+    switch (t) {
+        case fspp_all:
+            return __fspp_suppressWhitespaceAll;
+            break;
+        case fspp_array:
+            return __fspp_suppressWhitespaceArray;
+            break;
+        case fspp_dictionary:
+            return __fspp_suppressWhitespaceDictionary;
+            break;
+        case fspp_set:
+            return __fspp_suppressWhitespaceSet;
+            break;
+        case fspp_orderedSet:
+            return __fspp_suppressWhitespaceOrderedSet;
+            break;
+        case fspp_object:
+            return __fspp_suppressWhitespaceObject;
+            break;
+            
+        default:
+            NSCAssert(true==false, @"Not a valid");
+            break;
+    }
+    
+    return false;
+}
+
+void fspp_setSuppressesWhitespace(enum __fspp_type t, bool shouldSuppress)
+{
+    switch (t) {
+        case fspp_all:
+            __fspp_suppressWhitespaceAll = shouldSuppress;
+            break;
+        case fspp_array:
+            __fspp_suppressWhitespaceArray = shouldSuppress;
+            break;
+        case fspp_dictionary:
+            __fspp_suppressWhitespaceDictionary = shouldSuppress;
+            break;
+        case fspp_set:
+            __fspp_suppressWhitespaceSet = shouldSuppress;
+            break;
+        case fspp_orderedSet:
+            __fspp_suppressWhitespaceOrderedSet = shouldSuppress;
+            break;
+        case fspp_object:
+            __fspp_suppressWhitespaceObject = shouldSuppress;
+            break;
+            
+        default:
+            NSCAssert(true==false, @"Not a valid");
+            break;
+    }
+}
+
+#endif
+
 #ifdef DEBUGPRINT_SWIZZLE
 #import "JRSwizzle.h"
-
+static bool __fspp_swizzled=false;
 bool fspp_swizzleContainerPrinters(NSError ** error)
 {
     Class nsarray_class, nsmutablearray_class, nsdictionary_class, nsmutabledictionary_class, nsset_class, nsmutableset_class, nsorderedset_class, nsmutableorderedset_class;
@@ -51,9 +150,21 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
         [nsmutableorderedset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
         if (*error) return false;
     }
-    
+    __fspp_swizzled = !__fspp_swizzled;
     return true;
 }
+bool fspp_on(void)
+{
+  return __fspp_swizzled;
+}
+#endif
+
+#ifdef DEBUGPRINT_ANY
+#ifdef DEBUGPRINT_SPACES_PER_INDENT
+NSUInteger fspp_spacesPerIndent = DEBUGPRINT_SPACES_PER_INDENT;
+#else
+NSUInteger fspp_spacesPerIndent = 4;
+#endif
 #endif
 
 #if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
@@ -115,7 +226,7 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     Class __strClass = [NSString class];
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
     __block NSString * tmpString;
 
     [str appendFormat:@"%@(\n", indent];
@@ -132,6 +243,9 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
             tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
         else
             tmpString = [[obj description] fs_stringByEscaping];
+        
+        if (fspp_suppressWhitespace(fspp_array))
+            tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
         [str appendFormat:@"%@    %@%@\n", indent, tmpString, (idx==lastObjectIndex)?@"":@","];
     }];
@@ -170,12 +284,12 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
 {
     NSMutableString * str = [[NSMutableString alloc] init];
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
 
     [str fs_appendDictionaryStartWithIndentString:indent];
 
     [self enumerateKeysAndObjectsUsingBlock:^(id _key, id _value, BOOL *stop) {
-        [str fs_appendDictionaryKey:_key value:_value locale:locale indentString:indent indentLevel:level+1];
+        [str fs_appendDictionaryKey:_key value:_value locale:locale indentString:indent indentLevel:level+1 whitespaceSuppression:fspp_suppressWhitespace(fspp_dictionary)];
     }];
 
     [str fs_appendDictionaryEndWithIndentString:indent];
@@ -212,7 +326,7 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
 {
     NSMutableString * str = [[NSMutableString alloc] init];
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
     
     Class __strClass = [NSString class];
     __block NSString * tmpString;
@@ -232,6 +346,9 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
             tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
         else
             tmpString = [[obj description] fs_stringByEscaping];
+        
+        if (fspp_suppressWhitespace(fspp_set))
+            tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
         [str appendFormat:@"%@    %@", indent, tmpString];
         if (idx+1 == count)
@@ -276,7 +393,7 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
 - (NSString *)fs_descriptionWithLocale__impl:(id)locale indent:(NSUInteger)level
 {
     NSMutableString * str = [[NSMutableString alloc] init];
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:4*level];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
     
     Class __strClass = [NSString class];
     __block NSString * tmpString;
@@ -295,6 +412,9 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
             tmpString = [[obj fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
         else
             tmpString = [[obj description] fs_stringByEscaping];
+        
+        if (fspp_suppressWhitespace(fspp_orderedSet))
+            tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
         [str appendFormat:@"%@    %@", indent, tmpString];
         if (idx+1 == count)
@@ -385,12 +505,22 @@ bool fspp_swizzleContainerPrinters(NSError ** error)
 }
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level
 {
+    [self fs_appendDictionaryKey:key value:value locale:locale indentString:indentString indentLevel:level whitespaceSuppression:false];
+}
+- (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress
+{
     NSString * _value = nil;
     if ([value respondsToSelector:@selector(fs_descriptionDictionary)]) _value = [[value fs_descriptionDictionary] descriptionWithLocale:locale indent:level];
     else if ([value respondsToSelector:@selector(descriptionWithLocale:indent:)]) _value = [value descriptionWithLocale:locale indent:level];
     else if ([value respondsToSelector:@selector(descriptionWithLocale:)]) _value = [[value descriptionWithLocale:locale] fs_stringByEscaping];
     else _value = [[value description] fs_stringByEscaping];
-    [self appendFormat:@"%@    %@ = %@;\n", indentString, [key fs_stringByEscaping], _value];
+    
+    if (suppress)
+        _value = [_value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level-[indentString length]];
+    
+    [self appendFormat:@"%@%@%@ = %@;\n", indentString, indent, [key fs_stringByEscaping], _value];
 }
 - (void)fs_appendDictionaryEndWithIndentString:(NSString *)indentString
 {
