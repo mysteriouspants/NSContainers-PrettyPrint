@@ -6,6 +6,7 @@
 //
 
 #import "NSContainers+DebugPrint.h"
+#import <objc/runtime.h>
 
 #ifdef DEBUGPRINT_ANY
 
@@ -106,48 +107,123 @@ void fspp_setSuppressesWhitespace(enum __fspp_type t, bool shouldSuppress)
 
 #endif
 
+struct __fspp_classes fspp_implementationClasses()
+{
+    struct __fspp_classes c;
+    @autoreleasepool {
+        c._NSArray = [[NSArray array] class];
+        c._NSMutableArray = [[NSMutableArray array] class];
+        c._NSDictionary = [[NSDictionary dictionary] class];
+        c._NSMutableDictionary = [[NSMutableDictionary dictionary] class];
+        c._NSSet = [[NSSet set] class];
+        c._NSMutableSet = [[NSMutableSet set] class];
+        c._NSOrderedSet = [[NSOrderedSet orderedSet] class];
+        c._NSMutableOrderedSet = [[NSMutableOrderedSet orderedSet] class];
+    }
+    return c;
+}
+
+struct __fspp_methods fspp_snapshotMethodStates(const struct __fspp_classes * c)
+{
+    struct __fspp_methods m;
+    
+    m._NSArray.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSArray, @selector(descriptionWithLocale:indent:));
+    m._NSMutableArray.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableArray, @selector(descriptionWithLocale:indent:));
+    m._NSDictionary.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSDictionary, @selector(descriptionWithLocale:indent:));
+    m._NSMutableDictionary.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableDictionary, @selector(descriptionWithLocale:indent:));
+    m._NSSet.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSSet, @selector(descriptionWithLocale:indent:));
+    m._NSMutableSet.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableSet, @selector(descriptionWithLocale:indent:));
+    m._NSOrderedSet.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSOrderedSet, @selector(descriptionWithLocale:indent:));
+    m._NSMutableOrderedSet.descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableOrderedSet, @selector(descriptionWithLocale:indent:));
+    
+#ifdef DEBUGPRINT_SWIZZLE
+    m._NSArray.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSArray, @selector(fs_descriptionWithLocale:indent:));
+    m._NSMutableArray.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableArray, @selector(fs_descriptionWithLocale:indent:));
+    m._NSDictionary.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSDictionary, @selector(fs_descriptionWithLocale:indent:));
+    m._NSMutableDictionary.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableDictionary, @selector(fs_descriptionWithLocale:indent:));
+    m._NSSet.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSSet, @selector(fs_descriptionWithLocale:indent:));
+    m._NSMutableSet.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableSet, @selector(fs_descriptionWithLocale:indent:));
+    m._NSOrderedSet.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSOrderedSet, @selector(fs_descriptionWithLocale:indent:));
+    m._NSMutableOrderedSet.fs_descriptionWithLocale_indent = class_getInstanceMethod(c->_NSMutableOrderedSet, @selector(fs_descriptionWithLocale:indent:));
+#endif
+    
+    return m;
+}
+
+NSString * fspp_NSStringFromClasses(const struct __fspp_classes * c)
+{
+    NSMutableString * str = [[NSMutableString alloc] init];
+    
+    [str appendFormat:@"  Visible Class       Implementation Class\n"];
+    [str appendFormat:@"NSArray             : %@\n", NSStringFromClass(c->_NSArray)];
+    [str appendFormat:@"NSMutableArray      : %@\n", NSStringFromClass(c->_NSMutableArray)];
+    [str appendFormat:@"NSDictionary        : %@\n", NSStringFromClass(c->_NSDictionary)];
+    [str appendFormat:@"NSMutableDictionary : %@\n", NSStringFromClass(c->_NSMutableDictionary)];
+    [str appendFormat:@"NSSet               : %@\n", NSStringFromClass(c->_NSSet)];
+    [str appendFormat:@"NSMutableSet        : %@\n", NSStringFromClass(c->_NSMutableSet)];
+    [str appendFormat:@"NSOrderedSet        : %@\n", NSStringFromClass(c->_NSOrderedSet)];
+    [str appendFormat:@"NSMutableOrderedSet : %@\n", NSStringFromClass(c->_NSMutableOrderedSet)];
+    
+    return str;
+}
+
+const char * __fspp_methodToString(Method m) { return sel_getName(method_getName(m)); }
+void __fspp_doStuffToNSMStringForMethods(NSMutableString * str, NSString * container, struct __fspp_methods_pair p)
+{
+    [str appendFormat:@"%@\n", container];
+    [str appendFormat:@"    descriptionWithLocale:indent:       %p      %s\n", p.descriptionWithLocale_indent, __fspp_methodToString(p.descriptionWithLocale_indent)];
+#ifdef DEBUGPRINT_SWIZZLE
+    [str appendFormat:@"    fs_descriptionWithLocale:indent:    %p      %s\n", p.fs_descriptionWithLocale_indent, __fspp_methodToString(p.fs_descriptionWithLocale_indent)];
+#endif
+}
+NSString * fspp_NSStringFromMethods(const struct __fspp_methods * m) {
+    NSMutableString * str = [[NSMutableString alloc] init];
+    
+    __fspp_doStuffToNSMStringForMethods(str, @"NSArray", m->_NSArray);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSMutableArray", m->_NSMutableArray);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSDictionary", m->_NSDictionary);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSMutableDictionary", m->_NSMutableDictionary);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSSet", m->_NSSet);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSMutableSet", m->_NSMutableSet);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSOrderedSet", m->_NSOrderedSet);
+    __fspp_doStuffToNSMStringForMethods(str, @"NSMutableOrderedSet", m->_NSMutableOrderedSet);
+    
+    return str;
+}
+
 #ifdef DEBUGPRINT_SWIZZLE
 #import "JRSwizzle.h"
 static bool __fspp_swizzled=false;
+
 bool fspp_swizzleContainerPrinters(NSError ** error)
 {
-    Class nsarray_class, nsmutablearray_class, nsdictionary_class, nsmutabledictionary_class, nsset_class, nsmutableset_class, nsorderedset_class, nsmutableorderedset_class;
-    @autoreleasepool {
-        nsarray_class = [[NSArray array] class];
-        nsmutablearray_class = [[NSMutableArray array] class];
-        nsdictionary_class = [[NSDictionary dictionary] class];
-        nsmutabledictionary_class = [[NSMutableDictionary dictionary] class];
-        nsset_class = [[NSSet set] class];
-        nsmutableset_class = [[NSMutableSet set] class];
-        nsorderedset_class = [[NSOrderedSet orderedSet] class];
-        nsmutableorderedset_class = [[NSMutableOrderedSet orderedSet] class];
-    }
-    
-    [nsarray_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    struct __fspp_classes c = fspp_implementationClasses();
+
+    [c._NSArray jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
     if (*error) return false;
-    if (nsarray_class != nsmutablearray_class) {
-        [nsmutablearray_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (c._NSArray != c._NSMutableArray) {
+        [c._NSMutableArray jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
         if (*error) return false;
     }
     
-    [nsdictionary_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    [c._NSDictionary jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
     if (*error) return false;
-    if (nsdictionary_class != nsmutabledictionary_class) {
-        [nsmutabledictionary_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (c._NSDictionary != c._NSMutableDictionary) {
+        [c._NSMutableDictionary jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
         if (*error) return false;
     }
     
-    [nsset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    [c._NSSet jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
     if (*error) return false;
-    if (nsset_class != nsmutableset_class) {
-        [nsmutableset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (c._NSSet != c._NSMutableSet) {
+        [c._NSMutableSet jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
         if (*error) return false;
     }
     
-    [nsorderedset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    [c._NSOrderedSet jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
     if (*error) return false;
-    if (nsorderedset_class != nsmutableorderedset_class) {
-        [nsmutableorderedset_class jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
+    if (c._NSOrderedSet != c._NSMutableOrderedSet) {
+        [c._NSMutableOrderedSet jr_swizzleMethod:@selector(descriptionWithLocale:indent:) withMethod:@selector(fs_descriptionWithLocale:indent:) error:error];
         if (*error) return false;
     }
     __fspp_swizzled = !__fspp_swizzled;
@@ -227,6 +303,7 @@ NSUInteger fspp_spacesPerIndent = 4;
     NSMutableString * str = [[NSMutableString alloc] init];
     Class __strClass = [NSString class];
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
+    NSString * sub_indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     __block NSString * tmpString;
 
     [str appendFormat:@"%@(\n", indent];
@@ -247,7 +324,7 @@ NSUInteger fspp_spacesPerIndent = 4;
         if (fspp_suppressWhitespace(fspp_array))
             tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
-        [str appendFormat:@"%@    %@%@\n", indent, tmpString, (idx==lastObjectIndex)?@"":@","];
+        [str appendFormat:@"%@%@%@%@\n", indent, sub_indent, tmpString, (idx==lastObjectIndex)?@"":@","];
     }];
 
     [str appendFormat:@"%@)", indent];
@@ -327,6 +404,7 @@ NSUInteger fspp_spacesPerIndent = 4;
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
+    NSString * sub_indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     
     Class __strClass = [NSString class];
     __block NSString * tmpString;
@@ -350,7 +428,7 @@ NSUInteger fspp_spacesPerIndent = 4;
         if (fspp_suppressWhitespace(fspp_set))
             tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
-        [str appendFormat:@"%@    %@", indent, tmpString];
+        [str appendFormat:@"%@%@%@", indent, sub_indent, tmpString];
         if (idx+1 == count)
             [str appendString:@"\n"];
         else
@@ -394,6 +472,7 @@ NSUInteger fspp_spacesPerIndent = 4;
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
+    NSString * sub_indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     
     Class __strClass = [NSString class];
     __block NSString * tmpString;
@@ -416,7 +495,7 @@ NSUInteger fspp_spacesPerIndent = 4;
         if (fspp_suppressWhitespace(fspp_orderedSet))
             tmpString = [tmpString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
-        [str appendFormat:@"%@    %@", indent, tmpString];
+        [str appendFormat:@"%@%@%@", indent, sub_indent, tmpString];
         if (idx+1 == count)
             [str appendString:@"\n"];
         else
@@ -527,3 +606,17 @@ NSUInteger fspp_spacesPerIndent = 4;
   [self appendFormat:@"%@}", indentString];
 }
 @end
+
+#ifdef DEBUGPRINT_ANY
+@implementation NSString (Trimmer)
+- (NSString *)fs_stringByTrimmingWhitespace
+{
+    return [self fs_stringByTrimmingWhitespaceForType:fspp_object];
+}
+- (NSString *)fs_stringByTrimmingWhitespaceForType:(enum __fspp_type)t
+{
+    if (fspp_suppressWhitespace(t)) return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    return self;
+}
+@end
+#endif

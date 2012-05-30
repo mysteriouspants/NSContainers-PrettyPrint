@@ -44,6 +44,41 @@
  * Every object needs to whitespace trim its own ivars, not trim itself of whitespace before returning the description string. If you don't understand, try doing it the wrong way and print out a few nested NSArrays.
  */
 
+#include <objc/runtime.h>
+
+struct __fspp_classes {
+    Class _NSArray;
+    Class _NSMutableArray;
+    Class _NSDictionary;
+    Class _NSMutableDictionary;
+    Class _NSSet;
+    Class _NSMutableSet;
+    Class _NSOrderedSet;
+    Class _NSMutableOrderedSet;
+};
+struct __fspp_methods_pair {
+    Method descriptionWithLocale_indent;
+#ifdef DEBUGPRINT_SWIZZLE
+    Method fs_descriptionWithLocale_indent;
+#endif
+};
+struct __fspp_methods {
+    struct __fspp_methods_pair _NSArray;
+    struct __fspp_methods_pair _NSMutableArray;
+    struct __fspp_methods_pair _NSDictionary;
+    struct __fspp_methods_pair _NSMutableDictionary;
+    struct __fspp_methods_pair _NSSet;
+    struct __fspp_methods_pair _NSMutableSet;
+    struct __fspp_methods_pair _NSOrderedSet;
+    struct __fspp_methods_pair _NSMutableOrderedSet;
+};
+
+struct __fspp_classes fspp_implementationClasses(void);
+struct __fspp_methods fspp_snapshotMethodStates(const struct __fspp_classes *);
+
+NSString * fspp_NSStringFromClasses(const struct __fspp_classes *);
+NSString * fspp_NSStringFromMethods(const struct __fspp_methods *);
+
 #ifdef DEBUGPRINT_SWIZZLE
 bool fspp_swizzleContainerPrinters(NSError **);
 bool fspp_on(void); // whether or not the debug print implementations are active
@@ -97,11 +132,17 @@ extern NSUInteger fspp_spacesPerIndent;
 @end
 #endif
 
-#if defined(DEBUGPRINT_NSSET) || defined(DEBUGPRINT_ALL)
+#if defined (DEBUGPRINT_NSSET) || defined (DEBUGPRINT_ALL)
 @interface NSSet (DebugPrint)
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 @interface NSMutableSet (DebugPrint)
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+#endif
+
+#ifdef DEBUGPRINT_SWIZZLE
+@interface NSSet (_)
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
 @end
 #endif
@@ -133,3 +174,10 @@ extern NSUInteger fspp_spacesPerIndent;
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress;
 - (void)fs_appendDictionaryEndWithIndentString:(NSString *)indentString;
 @end
+
+#ifdef DEBUGPRINT_ANY
+@interface NSString (Trimmer)
+- (NSString *)fs_stringByTrimmingWhitespace;
+- (NSString *)fs_stringByTrimmingWhitespaceForType:(enum __fspp_type)t;
+@end
+#endif

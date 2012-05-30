@@ -47,9 +47,9 @@ so:
      *         )>
      */
 
-*aside:* `sub_indent` is using the global `fspp_spacesPerIndent` to promulgate
-the inner padding of the description. This is a configurable global
-variable you can use to control the padding for containers. If you use
-it in your own description code, then your descriptions will be in-line
+*aside:* `sub_indent` is using the global `fspp_spacesPerIndent` to
+promulgate the inner padding of the description. This is a configurable
+global variable you can use to control the padding for containers. If you
+use it in your own description code, then your descriptions will be in-line
 with everything else. The default is 4, and you probably won't end up
 changing this.
