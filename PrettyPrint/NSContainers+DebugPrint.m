@@ -633,7 +633,6 @@ NSUInteger fspp_spacesPerIndent = 4;
 }
 @end
 
-#ifdef DEBUGPRINT_ANY
 @implementation NSString (Trimmer)
 - (NSString *)fs_stringByTrimmingWhitespace
 {
@@ -645,4 +644,3 @@ NSUInteger fspp_spacesPerIndent = 4;
     return self;
 }
 @end
-#endif

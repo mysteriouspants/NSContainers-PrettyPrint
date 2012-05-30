@@ -179,9 +179,7 @@ extern NSUInteger fspp_spacesPerIndent;
 - (void)fs_appendDictionaryEndWithIndentString:(NSString *)indentString;
 @end
 
-#ifdef DEBUGPRINT_ANY
 @interface NSString (Trimmer)
 - (NSString *)fs_stringByTrimmingWhitespace;
 - (NSString *)fs_stringByTrimmingWhitespaceForType:(enum __fspp_type)t;
 @end
-#endif
