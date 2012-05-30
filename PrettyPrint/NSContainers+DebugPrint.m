@@ -8,8 +8,6 @@
 #import "NSContainers+DebugPrint.h"
 #import <objc/runtime.h>
 
-#ifdef DEBUGPRINT_ANY
-
 #ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_ALL
 bool __fspp_suppressWhitespaceAll = false;
 #else
@@ -104,8 +102,6 @@ void fspp_setSuppressesWhitespace(enum __fspp_type t, bool shouldSuppress)
             break;
     }
 }
-
-#endif
 
 struct __fspp_classes fspp_implementationClasses()
 {
@@ -235,12 +231,10 @@ bool fspp_on(void)
 }
 #endif
 
-#ifdef DEBUGPRINT_ANY
 #ifdef DEBUGPRINT_SPACES_PER_INDENT
 NSUInteger fspp_spacesPerIndent = DEBUGPRINT_SPACES_PER_INDENT;
 #else
 NSUInteger fspp_spacesPerIndent = 4;
-#endif
 #endif
 
 #if defined(DEBUGPRINT_NSARRAY) || defined(DEBUGPRINT_ALL) || defined(DEBUGPRINT_SWIZZLE)
@@ -584,7 +578,7 @@ NSUInteger fspp_spacesPerIndent = 4;
 }
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level
 {
-    [self fs_appendDictionaryKey:key value:value locale:locale indentString:indentString indentLevel:level whitespaceSuppression:true];
+    [self fs_appendDictionaryKey:key value:value locale:locale indentString:indentString indentLevel:level whitespaceSuppression:fspp_suppressWhitespace(fspp_dictionary)];
 }
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress
 {
@@ -595,7 +589,7 @@ NSUInteger fspp_spacesPerIndent = 4;
     else _value = [[value description] fs_stringByEscaping];
     
     if (suppress)
-        _value = [_value fs_stringByTrimmingWhitespaceForType:fspp_object];
+        _value = [_value fs_stringByTrimmingWhitespace];
 
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     

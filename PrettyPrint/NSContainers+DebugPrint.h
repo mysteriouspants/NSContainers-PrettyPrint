@@ -92,7 +92,6 @@ bool fspp_on(void); // whether or not the debug print implementations are active
 #define DEBUGPRINT_NO_SUPPRESS_WHITESPACE_ANY
 #endif
 
-#ifdef DEBUGPRINT_ANY
 enum __fspp_type {
     fspp_all,
     fspp_array,
@@ -103,11 +102,8 @@ enum __fspp_type {
 };
 bool fspp_suppressWhitespace(enum __fspp_type t);
 void fspp_setSuppressesWhitespace(enum __fspp_type t, bool shouldSuppress);
-#endif
 
-#ifdef DEBUGPRINT_ANY
 extern NSUInteger fspp_spacesPerIndent;
-#endif
 
 // implement this in order to have your own objects print themselves in property-list like format
 @protocol FSDescriptionDict <NSObject>
