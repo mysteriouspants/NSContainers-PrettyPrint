@@ -20,10 +20,33 @@
 + (id)exObjWithString:(NSString *)ivar0 uinteger:(size_t)ivar1 array:(NSArray *)ivar2 dictionary:(NSDictionary *)ivar3 set:(NSSet *)ivar4 orderedSet:(NSOrderedSet *)ivar5;
 @end
 
+@interface MyObj : NSObject {
+    @public
+    NSNumber * _foo;
+}
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+
+@interface MyObj2 : NSObject {
+    @public
+    size_t _foo;
+    id _bar;
+}
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level;
+@end
+
 int main(int argc, const char * argv[])
 {
 
     @autoreleasepool {
+        
+        MyObj * f = [[MyObj alloc] init];
+        f->_foo = [NSNumber numberWithFloat:3.1415926543];
+        printf("MyObj:\n%s\n", [[f description] UTF8String]);
+        
+        MyObj2 * f1 = [[MyObj2 alloc] init];
+        f1->_foo = 41; f1->_bar = f;
+        printf("MyObj2:\n%s\n", [[f1 description] UTF8String]);
         
         ExObj * e1 = [ExObj exObjWithString:@"bar"
                                    uinteger:argc
@@ -77,16 +100,58 @@ int main(int argc, const char * argv[])
 {
     NSMutableString * str = [[NSMutableString alloc] init];
     NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level];
-    NSString * sub_indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     
-    [str appendFormat:@"%@<%@:%p\n",indent, NSStringFromClass([self class]), (const void*)self];
-    [str appendFormat:@"%@%@ivar0: %@\n",indent,sub_indent,[_ivar0 fs_stringByEscaping]];
-    [str appendFormat:@"%@%@ivar1: %lu\n",indent,sub_indent,_ivar1];
-    [str appendFormat:@"%@%@ivar2: %@\n",indent,sub_indent,[[_ivar2 descriptionWithLocale:locale indent:level+2] fs_stringByTrimmingWhitespace]];
-    [str appendFormat:@"%@%@ivar3: %@\n",indent,sub_indent,[[_ivar3 descriptionWithLocale:locale indent:level+2] fs_stringByTrimmingWhitespace]];
-    [str appendFormat:@"%@%@ivar4: %@\n",indent,sub_indent,[[_ivar4 descriptionWithLocale:locale indent:level+2] fs_stringByTrimmingWhitespace]];
-    [str appendFormat:@"%@%@ivar5: %@>",indent, sub_indent,[[_ivar5 descriptionWithLocale:locale indent:level+2] fs_stringByTrimmingWhitespace]];
+    [str fs_appendObjectStartWithIndentString:indent caller:self];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar0" value:_ivar0 locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar1" value:[NSNumber numberWithUnsignedInteger:_ivar1] locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar2" value:_ivar2 locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar3" value:_ivar3 locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar4" value:_ivar4 locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"ivar5" value:_ivar5 locale:locale indentLevel:level+1];
+    [str fs_appendObjectEnd];
     
+    return str;
+}
+- (NSString *)description { return [self descriptionWithLocale:nil indent:0]; }
+@end
+
+@implementation MyObj
+- (NSString *)descriptionWithLocale:(id)locale
+                             indent:(NSUInteger)level {
+    NSString * indent =
+    [NSString fs_stringByFillingWithCharacter:' '
+                                     repeated:fspp_spacesPerIndent*level];
+    NSMutableString * str = [[NSMutableString alloc] init];
+    [str fs_appendDictionaryStartWithIndentString:indent caller:self];
+    [str fs_appendDictionaryKey:@"foo" value:_foo locale:locale
+                   indentString:indent indentLevel:level+1];
+    [str fs_appendDictionaryEndWithIndentString:indent];
+    return str;
+}
+- (NSString *)description { return [self descriptionWithLocale:nil indent:0]; }
+@end
+
+@implementation MyObj2
+- (NSString *)descriptionWithLocale:(id)locale
+                             indent:(NSUInteger)level {
+    NSString * indent =
+    [NSString fs_stringByFillingWithCharacter:' '
+                                     repeated:fspp_spacesPerIndent*level];
+    NSMutableString * str = [[NSMutableString alloc] init];
+    [str fs_appendObjectStartWithIndentString:indent caller:self];
+    [str fs_appendObjectPropertyKey:@"foo" value:
+     [NSNumber numberWithUnsignedInteger:_foo]
+                             locale:locale indentLevel:level+1];
+    [str fs_appendObjectNewlineWithIndentString:indent];
+    [str fs_appendObjectPropertyKey:@"bar" value:_bar
+                             locale:locale indentLevel:level+1];
+    [str fs_appendObjectEnd];
     return str;
 }
 - (NSString *)description { return [self descriptionWithLocale:nil indent:0]; }

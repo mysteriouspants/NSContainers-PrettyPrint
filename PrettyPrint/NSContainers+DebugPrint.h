@@ -167,6 +167,14 @@ extern NSUInteger fspp_spacesPerIndent;
 + (NSString *)fs_stringByFillingWithString:(NSString *)string repeated:(NSUInteger)times;
 @end
 
+@interface NSMutableString (ObjectPrinterUtils)
+- (void)fs_appendObjectStartWithIndentString:(NSString *)indentString caller:(id)caller;
+- (void)fs_appendObjectPropertyKey:(NSString *)key value:(id)value locale:(id)locale indentLevel:(NSUInteger)level;
+- (void)fs_appendObjectPropertyKey:(NSString *)key value:(id)value locale:(id)locale indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress;
+- (void)fs_appendObjectNewlineWithIndentString:(NSString *)indentString;
+- (void)fs_appendObjectEnd;
+@end
+
 @interface NSMutableString (PrettyDict)
 - (void)fs_appendDictionaryStartWithIndentString:(NSString *)indentString;
 - (void)fs_appendDictionaryStartWithIndentString:(NSString *)indentString caller:(id)caller;

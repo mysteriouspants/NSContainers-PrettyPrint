@@ -584,7 +584,7 @@ NSUInteger fspp_spacesPerIndent = 4;
 }
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level
 {
-    [self fs_appendDictionaryKey:key value:value locale:locale indentString:indentString indentLevel:level whitespaceSuppression:false];
+    [self fs_appendDictionaryKey:key value:value locale:locale indentString:indentString indentLevel:level whitespaceSuppression:true];
 }
 - (void)fs_appendDictionaryKey:(NSString *)key value:(id)value locale:(id)locale indentString:(NSString *)indentString indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress
 {
@@ -595,15 +595,47 @@ NSUInteger fspp_spacesPerIndent = 4;
     else _value = [[value description] fs_stringByEscaping];
     
     if (suppress)
-        _value = [_value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        _value = [_value fs_stringByTrimmingWhitespaceForType:fspp_object];
 
-    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent*level-[indentString length]];
+    NSString * indent = [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent];
     
     [self appendFormat:@"%@%@%@ = %@;\n", indentString, indent, [key fs_stringByEscaping], _value];
 }
 - (void)fs_appendDictionaryEndWithIndentString:(NSString *)indentString
 {
   [self appendFormat:@"%@}", indentString];
+}
+@end
+
+@implementation NSMutableString (ObjectPrinterUtils)
+- (void)fs_appendObjectStartWithIndentString:(NSString *)indentString caller:(id)caller
+{
+    [self appendFormat:@"%@<%@:%p", indentString, NSStringFromClass([caller class]), (const void *)caller];
+}
+- (void)fs_appendObjectPropertyKey:(NSString *)key value:(id)value locale:(id)locale indentLevel:(NSUInteger)level
+{
+    [self fs_appendObjectPropertyKey:key value:value locale:locale indentLevel:level whitespaceSuppression:true];
+}
+- (void)fs_appendObjectPropertyKey:(NSString *)key value:(id)value locale:(id)locale indentLevel:(NSUInteger)level whitespaceSuppression:(bool)suppress
+{
+    NSString * _value = nil;
+    if ([value respondsToSelector:@selector(fs_descriptionDictionary)]) _value = [[value fs_descriptionDictionary] descriptionWithLocale:locale indent:level+1];
+    else if ([value respondsToSelector:@selector(descriptionWithLocale:indent:)]) _value = [value descriptionWithLocale:locale indent:level+1];
+    else if ([value respondsToSelector:@selector(descriptionWithLocale:)]) _value = [[value descriptionWithLocale:locale] fs_stringByEscaping];
+    else _value = [[value description] fs_stringByEscaping];
+    
+    if (suppress)
+        _value = [_value fs_stringByTrimmingWhitespaceForType:fspp_object];
+    
+    [self appendFormat:@" %@: %@", key, _value];
+}
+- (void)fs_appendObjectNewlineWithIndentString:(NSString *)indentString
+{
+    [self appendFormat:@"\n%@%@", indentString, [NSString fs_stringByFillingWithCharacter:' ' repeated:fspp_spacesPerIndent-1]];
+}
+- (void)fs_appendObjectEnd
+{
+    [self appendString:@">"];
 }
 @end
 
