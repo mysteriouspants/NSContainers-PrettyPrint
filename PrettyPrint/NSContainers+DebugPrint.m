@@ -8,6 +8,9 @@
 #import "NSContainers+DebugPrint.h"
 #import <objc/runtime.h>
 
+const char * __fspp_methodToString(Method);
+void __fspp_doStuffToNSMStringForMethods(NSMutableString *, NSString *, struct __fspp_methods_pair);
+
 #ifdef DEBUGPRINT_NO_SUPPRESS_WHITESPACE_ALL
 bool __fspp_suppressWhitespaceAll = false;
 #else
